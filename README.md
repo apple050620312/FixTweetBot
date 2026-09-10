@@ -120,6 +120,10 @@ For large installations, run multiple bot instances with the same `SHARD_COUNT` 
 non-overlapping comma-separated `SHARD_IDS` set. Use the shard count recommended by Discord's Gateway Bot endpoint.
 Each shard ID must be owned by exactly one running instance.
 
+Run database migrations once before starting or replacing bot instances. The example Compose file provides a
+one-shot `migrate` service and starts the bot only after that service succeeds. Container startup no longer ignores
+migration failures. Set `RUN_DATABASE_MIGRATIONS=true` only for a single-instance legacy deployment.
+
 #### Available environment variables
 
 | Environment variable | Comment                                                                         |

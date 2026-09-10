@@ -67,18 +67,41 @@ class Event(Model):
         """Flush the buffer every 5 seconds"""
         while True:
             await asyncio.sleep(5)
-            async with cls._lock:
-                if cls._buffer:
-                    events = cls._buffer[:_flush_batch_size]
-                    del cls._buffer[:_flush_batch_size]
-                else:
-                    continue
             try:
-                await asyncio.to_thread(cls.bulk_create, events)
+                await cls.flush()
             except Exception:
                 _logger.exception('Failed to flush analytics events')
-                async with cls._lock:
-                    cls._buffer = (events + cls._buffer)[-_buffer_limit:]
+
+    @classmethod
+    async def flush(cls) -> None:
+        """Flush one bounded analytics batch, restoring it on failure."""
+
+        async with cls._lock:
+            if not cls._buffer:
+                return
+            events = cls._buffer[:_flush_batch_size]
+            del cls._buffer[:_flush_batch_size]
+        try:
+            await asyncio.to_thread(cls.bulk_create, events)
+        except Exception:
+            async with cls._lock:
+                cls._buffer = (events + cls._buffer)[-_buffer_limit:]
+            raise
+
+    @classmethod
+    async def close(cls) -> None:
+        """Stop the background task and flush all pending analytics batches."""
+
+        if cls._flush_task is not None:
+            cls._flush_task.cancel()
+            await asyncio.gather(cls._flush_task, return_exceptions=True)
+            cls._flush_task = None
+        while cls._buffer:
+            try:
+                await cls.flush()
+            except Exception:
+                _logger.exception('Failed to flush analytics events during shutdown')
+                break
 
     @classmethod
     async def buff_cr(cls, *events: dict) -> None:
