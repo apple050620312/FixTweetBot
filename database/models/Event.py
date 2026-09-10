@@ -12,6 +12,8 @@ from masoniteorm.models import Model
 import discore
 
 
+__all__ = ('Event',)
+
 _logger = logging.getLogger(__name__)
 _buffer_limit = max(1000, int(os.getenv('ANALYTICS_BUFFER_LIMIT', '100000')))
 _flush_batch_size = max(100, int(os.getenv('ANALYTICS_FLUSH_BATCH_SIZE', '5000')))

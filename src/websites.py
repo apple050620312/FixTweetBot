@@ -5,10 +5,10 @@ import logging
 import asyncio
 import os
 import re
-from typing import Type, Iterable, Callable
+from typing import Type, Iterable, Callable, Self
 
-from database.models.Event import *
-from database.models.Guild import *
+from database.models.Event import Event
+from database.models.Guild import EmbedEzView, FxEmbedView, Guild, InstagramView, TiktokView
 from src import utils
 import aiohttp
 
